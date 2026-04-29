@@ -20,8 +20,6 @@ import java.util.logging.Logger;
  *   - The server broadcasts the updated state to ALL connected clients,
  *     so every node sees the same time (simulating synchronized clocks).
  *   - New clients immediately receive current state upon connection (STATUS_UPDATE).
- *
- * Run this first, then launch one or more ClockClientGUI instances.
  */
 public class ClockServer {
     private static final Logger LOGGER = Logger.getLogger(ClockServer.class.getName());
@@ -53,7 +51,6 @@ public class ClockServer {
     }
 
     // ---- Synchronized state-change methods ----
-
     public synchronized void startStopwatch() {
         if (!internalClock.isRunning()) {
             internalClock.start();

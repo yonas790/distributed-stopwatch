@@ -8,7 +8,7 @@ public class Clock {
     private long startTime;
     private long elapsedTime;
     private boolean running;
-    private long serverOffset; // T_server - T_local (Cristian's Algorithm offset)
+    private long serverOffset; 
 
     public Clock() {
         this.startTime = 0;
