@@ -52,19 +52,15 @@ public class ClockServer {
 
     // ---- Synchronized state-change methods ----
     public synchronized void startStopwatch() {
-        if (!internalClock.isRunning()) {
-            internalClock.start();
-            broadcast(ClockSyncProtocol.Command.START);
-            LOGGER.info("Stopwatch STARTED. Broadcasting to " + clients.size() + " clients.");
-        }
+        internalClock.start();
+        broadcast(ClockSyncProtocol.Command.START);
+        LOGGER.info("Stopwatch STARTED. Broadcasting to " + clients.size() + " clients.");
     }
 
     public synchronized void stopStopwatch() {
-        if (internalClock.isRunning()) {
-            internalClock.stop();
-            broadcast(ClockSyncProtocol.Command.STOP);
-            LOGGER.info("Stopwatch STOPPED at " + Clock.formatTime(internalClock.getDisplayTime()));
-        }
+        internalClock.stop();
+        broadcast(ClockSyncProtocol.Command.STOP);
+        LOGGER.info("Stopwatch STOPPED at " + Clock.formatTime(internalClock.getDisplayTime()));
     }
 
     public synchronized void resetStopwatch() {

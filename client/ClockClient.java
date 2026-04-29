@@ -85,44 +85,25 @@ public class ClockClient {
     private void handleServerUpdate(ClockSyncProtocol update) {
         LOGGER.info("Received: " + update);
 
-        switch (update.getCommand()) {
-            case START:
-                clock.setElapsedTime(update.getStopwatchTime());
-                clock.setRunning(true);
-                break;
+        if (update.getCommand() == ClockSyncProtocol.Command.RESET) {
+            clock.setRunning(false);
+            clock.reset();
+        } else {
+            /*
+             * Unified Sync Logic:
+             * We apply the same correction to START, STOP, and STATUS_UPDATE.
+             *   correctedTime = serverTime + (estimated Latency if running)
+             */
+            long receiveTime = System.currentTimeMillis();
+            long estimatedLatency = Math.max(0, (receiveTime - update.getTimestamp()) / 2);
+            long correctedTime = update.getStopwatchTime() + (update.isRunning() ? estimatedLatency : 0);
 
-            case STOP:
-                clock.setRunning(false);
-                clock.setElapsedTime(update.getStopwatchTime());
-                break;
+            clock.setElapsedTime(correctedTime);
+            clock.setRunning(update.isRunning());
 
-            case RESET:
-                clock.setRunning(false);
-                clock.reset();
-                break;
-
-            case STATUS_UPDATE:
-            case SYNC:
-                /*
-                 * Cristian's Algorithm (simplified):
-                 *   The server embeds its wall-clock timestamp in the message.
-                 *   We estimate one-way latency ≈ (receiveTime - serverTimestamp) / 2
-                 *   and correct the stopwatch time accordingly.
-                 *
-                 *   For a broadcast STATUS_UPDATE the latency adjustment is small,
-                 *   but the principle is demonstrated here.
-                 */
-                long receiveTime = System.currentTimeMillis();
-                long estimatedLatency = Math.max(0, (receiveTime - update.getTimestamp()) / 2);
-                long correctedTime = update.getStopwatchTime() + (update.isRunning() ? estimatedLatency : 0);
-
-                clock.setElapsedTime(correctedTime);
-                clock.setRunning(update.isRunning());
-
-                LOGGER.info(String.format(
-                        "Clock sync applied — server=%dms, latency~=%dms, corrected=%dms",
-                        update.getStopwatchTime(), estimatedLatency, correctedTime));
-                break;
+            LOGGER.info(String.format(
+                    "Clock sync applied — cmd=%s, server=%dms, latency~=%dms, corrected=%dms",
+                    update.getCommand(), update.getStopwatchTime(), estimatedLatency, correctedTime));
         }
 
         if (onUpdate != null) onUpdate.run();
